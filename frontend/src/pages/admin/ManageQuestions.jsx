@@ -1,26 +1,116 @@
-import React ,{ useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
-import { Table, TableHead, TableRow, TableCell, TableBody } from "../../components/ui/Table";
+import {
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+} from "../../components/ui/Table";
 import { Plus, Trash2, Edit } from "lucide-react";
+import axios from "axios";
 
 const ManageQuestions = () => {
-  const [questions, setQuestions] = useState([
-    { id: 1, question: "What is React?", type: "2 Marks", module: "Module 1" },
-    { id: 2, question: "Explain useState hook.", type: "10 Marks", module: "Module 2" }
-  ]);
-  
-  const [newQuestion, setNewQuestion] = useState({ question: "", type: "", module: "" });
+  const [questions, setQuestions] = useState([]);
+  const [subjects, setSubjects] = useState([]);
 
-  const handleAddQuestion = () => {
-    if (newQuestion.question && newQuestion.type && newQuestion.module) {
-      setQuestions([...questions, { id: Date.now(), ...newQuestion }]);
-      setNewQuestion({ question: "", type: "", module: "" });
+  const [newQuestion, setNewQuestion] = useState({
+    questionText: "",
+    subjectCode: "",
+    year: "",
+    co: "",
+    llo: "",
+    bL: "",
+    po: "",
+    marks: "",
+  });
+
+  const token = localStorage.getItem("token");
+
+  // Fetch subjects
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/api/qpaper/subject",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setSubjects(response.data.subjects);
+      } catch (error) {
+        console.error(
+          "Error fetching subjects:",
+          error.response?.data?.message || error.message
+        );
+      }
+    };
+
+    fetchSubjects();
+  }, [token]);
+
+  // Fetch questions
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/api/qpaper/questions",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        console.log(response);
+        setQuestions(response.data.questionSets);
+      } catch (error) {
+        console.error(
+          "Error fetching questions:",
+          error.response?.data?.message || error.message
+        );
+      }
+    };
+    fetchQuestions();
+  }, [token]);
+
+  // Handle adding a new question
+  const handleAddQuestion = async () => {
+    if (Object.values(newQuestion).every((value) => value)) {
+      try {
+        await axios.post(
+          "http://localhost:3000/api/qpaper/questions",
+          {
+            subjectCode: newQuestion.subjectCode,
+            year: parseInt(newQuestion.year, 10),
+            questionText: newQuestion.questionText,
+            co: newQuestion.co,
+            llo: newQuestion.llo,
+            bL: newQuestion.bL,
+            po: newQuestion.po,
+            marks: parseInt(newQuestion.marks, 10),
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        setNewQuestion({
+          questionText: "",
+          subjectCode: "",
+          year: "",
+          co: "",
+          llo: "",
+          bL: "",
+          po: "",
+          marks: "",
+        });
+
+        // Refresh Questions
+        setQuestions([...questions, { id: Date.now(), ...newQuestion }]);
+      } catch (error) {
+        console.error(
+          "Error adding question:",
+          error.response?.data?.message || error.message
+        );
+      }
     }
-  };
-
-  const handleDeleteQuestion = (id) => {
-    setQuestions(questions.filter(q => q.id !== id));
   };
 
   return (
@@ -28,54 +118,136 @@ const ManageQuestions = () => {
       <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
         <Plus className="mr-2" /> Manage Questions
       </h2>
-   
+
       <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Input
+        <textarea
           placeholder="Question"
-          value={newQuestion.question}
-          onChange={(e) => setNewQuestion({ ...newQuestion, question: e.target.value })}
+          value={newQuestion.questionText}
+          onChange={(e) =>
+            setNewQuestion({ ...newQuestion, questionText: e.target.value })
+          }
+          className="border border-gray-300 rounded p-2 w-full col-span-3"
         />
+
+        {/* Course Outcome (CO) */}
         <Input
-          placeholder="Type (e.g., 2 Marks, 10 Marks)"
-          value={newQuestion.type}
-          onChange={(e) => setNewQuestion({ ...newQuestion, type: e.target.value })}
+          placeholder="CO (Course Outcome)"
+          value={newQuestion.co}
+          onChange={(e) =>
+            setNewQuestion({ ...newQuestion, co: e.target.value })
+          }
+          className="border border-gray-300 rounded p-2 w-full"
         />
+
+        {/* Learning Level Outcome (LLO) */}
         <Input
-          placeholder="Module (e.g., Module 1)"
-          value={newQuestion.module}
-          onChange={(e) => setNewQuestion({ ...newQuestion, module: e.target.value })}
+          placeholder="LLO (Learning Level Outcome)"
+          value={newQuestion.llo}
+          onChange={(e) =>
+            setNewQuestion({ ...newQuestion, llo: e.target.value })
+          }
+          className="border border-gray-300 rounded p-2 w-full"
         />
-        <Button onClick={handleAddQuestion} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded col-span-1 md:col-span-3">
+
+        {/* Bloom's Taxonomy Level (BL) */}
+        <Input
+          placeholder="BL (Bloom's Taxonomy Level)"
+          value={newQuestion.bL}
+          onChange={(e) =>
+            setNewQuestion({ ...newQuestion, bL: e.target.value })
+          }
+          className="border border-gray-300 rounded p-2 w-full"
+        />
+
+        {/* Program Outcome (PO) */}
+        <Input
+          placeholder="PO (Program Outcome)"
+          value={newQuestion.po}
+          onChange={(e) =>
+            setNewQuestion({ ...newQuestion, po: e.target.value })
+          }
+          className="border border-gray-300 rounded p-2 w-full"
+        />
+
+        <select
+          value={newQuestion.marks}
+          onChange={(e) =>
+            setNewQuestion({
+              ...newQuestion,
+              marks: parseInt(e.target.value, 10),
+            })
+          }
+          className="border border-gray-300 rounded p-2 w-full"
+        >
+          <option value="">Select Marks</option>
+          <option value="2">2 Marks</option>
+          <option value="10">10 Marks</option>
+        </select>
+
+        <select
+          value={newQuestion.subjectCode}
+          onChange={(e) =>
+            setNewQuestion({ ...newQuestion, subjectCode: e.target.value })
+          }
+          className="border border-gray-300 rounded p-2 w-full"
+        >
+          <option value="">Select Subject</option>
+          {subjects.map((subject) => (
+            <option key={subject.subjectCode} value={subject.subjectCode}>
+              {subject.subjectName} ({subject.year})
+            </option>
+          ))}
+        </select>
+
+        <Input
+          placeholder="Year"
+          value={newQuestion.year}
+          onChange={(e) =>
+            setNewQuestion({
+              ...newQuestion,
+              year: parseInt(e.target.value, 10),
+            })
+          }
+          className="border border-gray-300 rounded p-2 w-full"
+        />
+
+        <Button
+          onClick={handleAddQuestion}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded col-span-1 md:col-span-3"
+        >
           <Plus className="mr-2" /> Add Question
         </Button>
       </div>
-      
-     
-      <Table>
+
+      {/* Questions Table */}
+      <Table className="w-full mt-6">
         <TableHead>
           <TableRow>
-            <TableCell className="font-bold">Question</TableCell>
-            <TableCell className="font-bold">Type</TableCell>
-            <TableCell className="font-bold">Module</TableCell>
-            <TableCell className="font-bold text-center">Actions</TableCell>
+            <TableCell>Question</TableCell>
+            <TableCell>Subject code</TableCell>
+            <TableCell>Year</TableCell>
+            <TableCell>CO</TableCell>
+            <TableCell>LLO</TableCell>
+            <TableCell>BL</TableCell>
+            <TableCell>PO</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {questions.map((q) => (
-            <TableRow key={q.id}>
-              <TableCell>{q.question}</TableCell>
-              <TableCell>{q.type}</TableCell>
-              <TableCell>{q.module}</TableCell>
-              <TableCell className="text-center">
-                <Button className="bg-yellow-500 hover:bg-yellow-600 text-white py-1 px-3 rounded mr-2">
-                  <Edit size={16} />
-                </Button>
-                <Button onClick={() => handleDeleteQuestion(q.id)} className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded">
-                  <Trash2 size={16} />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
+          {questions.flatMap((qSet) =>
+            [...qSet.twoMarksQuestions, ...qSet.tenMarksQuestions].map(
+              (q, index) => (
+                <TableRow key={index}>
+                  <TableCell>{q.questionText}</TableCell>
+                  <TableCell>{qSet.subjectId.subjectCode}</TableCell>
+                  <TableCell>{qSet.subjectId.year}</TableCell>
+                  <TableCell>{q.co}</TableCell>
+                  <TableCell>{q.llo}</TableCell>
+                  <TableCell>{q.bL}</TableCell>
+                  <TableCell>{q.po}</TableCell>
+                </TableRow>
+              )
+            )
+          )}
         </TableBody>
       </Table>
     </div>

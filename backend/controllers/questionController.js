@@ -1,51 +1,64 @@
 import { asyncHandler } from "../middlewares/asyncHandler.js";
-import { Subject } from "../models/dbmodels.js";
-import { QuestionSet } from "../models/dbmodels.js";
-
+import { Subject, QuestionSet } from "../models/dbmodels.js";
 
 const addQuestion = asyncHandler(async (req, res) => {
-    const { subjectCode, year, questionText, co, llo, bL, po, marks } = req.body;
+  let { subjectCode, year, questionText, co, llo, bL, po, marks } = req.body;
 
-    if (!subjectCode || !year || !questionText || !co || !llo || !bL || !po || !marks) {
-        return res.status(400).json({ message: "Please provide all required fields" });
-    }
+  if (
+    !subjectCode ||
+    !year ||
+    !questionText ||
+    !co ||
+    !llo ||
+    !bL ||
+    !po ||
+    !marks
+  ) {
+    return res
+      .status(400)
+      .json({ message: "Please provide all required fields" });
+  }
 
-    const subject = await Subject.findOne({ subjectCode, year });
-    if (!subject) {
-        return res.status(404).json({ message: "Subject not found" });
-    }
+  year = parseInt(year, 10);
+  marks = parseInt(marks, 10);
 
-    let questionSet = await QuestionSet.findOne({ subjectId: subject._id });
-    
-    if (!questionSet) {
-        questionSet = new QuestionSet({ subjectId: subject._id, twoMarksQuestions: [], tenMarksQuestions: [] });
-    }
+  const subject = await Subject.findOne({ subjectCode, year });
+  if (!subject) {
+    return res.status(404).json({ message: "Subject not found" });
+  }
 
-    const newQuestion = { questionText, co, llo, bL, po };
+  let questionSet = await QuestionSet.findOne({ subjectId: subject._id });
 
-    if (marks === 2) {
-        questionSet.twoMarksQuestions.push(newQuestion);
-    } else if (marks === 10) {
-        questionSet.tenMarksQuestions.push(newQuestion);
-    } else {
-        return res.status(400).json({ message: "Invalid marks. Only 2 or 10 allowed." });
-    }
+  if (!questionSet) {
+    questionSet = new QuestionSet({
+      subjectId: subject._id,
+      twoMarksQuestions: [],
+      tenMarksQuestions: [],
+    });
+  }
 
-    await questionSet.save();
+  const newQuestion = { questionText, co, llo, bL, po };
 
-    res.status(201).json({ message: "Question added successfully", questionSet });
+  if (marks === 2) {
+    questionSet.twoMarksQuestions.push(newQuestion);
+  } else if (marks === 10) {
+    questionSet.tenMarksQuestions.push(newQuestion);
+  } else {
+    return res
+      .status(400)
+      .json({ message: "Invalid marks. Only 2 or 10 allowed." });
+  }
+
+  await questionSet.save();
+
+  res.status(201).json({ message: "Question added successfully", questionSet });
 });
-
-//get all question
 
 const getAllQuestionSets = asyncHandler(async (req, res) => {
-    const questionSets = await QuestionSet.find().populate("subjectId");
+  const questionSets = (await QuestionSet.find().populate("subjectId")) || [];
 
-    if (!questionSets || questionSets.length === 0) {
-        return res.status(404).json({ message: "No question sets found" });
-    }
-
-    res.status(200).json({ questionSets });
+  console.log(questionSets);
+  res.status(200).json({ questionSets });
 });
 
-export {addQuestion,getAllQuestionSets}
+export { addQuestion, getAllQuestionSets };
