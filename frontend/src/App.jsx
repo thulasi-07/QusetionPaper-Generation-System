@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import React, { Suspense } from "react";
 
-import Home from "./pages/Home"; 
+import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -18,23 +18,20 @@ function App() {
     <Router>
       <Suspense fallback={<div>Loading...</div>}>
         <Routes>
-          
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
-         
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
-            <Route path="generate-paper" element={<GeneratePaper />} />
-            <Route path="add-subject" element={<ManageSubjects/>} />
+            <Route path="add-subject" element={<ManageSubjects />} />
 
             <Route path="manage-patterns" element={<ManagePatterns />} />
             <Route path="manage-questions" element={<ManageQuestions />} />
+            <Route path="generate-paper" element={<GeneratePaper />} />
             <Route path="reports" element={<Reports />} />
           </Route>
 
-          
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

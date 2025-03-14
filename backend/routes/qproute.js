@@ -22,6 +22,6 @@ qprouter
   .route("/questions")
   .post(authMiddleware, addQuestion)
   .get(authMiddleware, getAllQuestionSets);
-qprouter.route("/generateqp").get(authMiddleware, generateQuestionPaper);
+qprouter.route("/generateqp").post(authMiddleware, generateQuestionPaper);
 
 export default qprouter;
