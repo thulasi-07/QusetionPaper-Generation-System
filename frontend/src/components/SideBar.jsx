@@ -14,6 +14,10 @@ import React from "react";
 const SideBar = () => {
   const [isOpen, setIsOpen] = useState(true);
 
+  const handelLogout = () => {
+    localStorage.removeItem("token");
+  };
+
   return (
     <div
       className={`h-screen bg-gradient-to-b from-blue-600 to-purple-600 text-white shadow-lg fixed top-0 ${
@@ -81,6 +85,7 @@ const SideBar = () => {
             <Link
               to="/"
               className="flex items-center space-x-3 px-6 py-3 hover:bg-red-600 transition rounded-md mt-8"
+              onClick={handelLogout}
             >
               <LogOut size={24} />
               <span className={isOpen ? "block" : "hidden"}>Logout</span>

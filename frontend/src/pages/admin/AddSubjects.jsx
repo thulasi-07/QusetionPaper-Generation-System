@@ -10,8 +10,10 @@ import {
   TableBody,
 } from "../../components/ui/Table";
 import { Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const ManageSubjects = () => {
+  const navigate = useNavigate();
   const [subjects, setSubjects] = useState([]);
   const [newSubject, setNewSubject] = useState({
     subjectName: "",
@@ -22,8 +24,13 @@ const ManageSubjects = () => {
 
   const token = localStorage.getItem("token");
 
-  // Fetch All Subjects
   useEffect(() => {
+    if (!token) {
+      console.error("Token is missing!");
+      navigate("/login");
+      return;
+    }
+
     const fetchSubjects = async () => {
       try {
         const response = await axios.get(
@@ -33,7 +40,7 @@ const ManageSubjects = () => {
           }
         );
 
-        setSubjects(response.data.subjects);
+        setSubjects(response.data.subjects || []);
       } catch (error) {
         console.error(
           "Error fetching subjects:",
@@ -44,40 +51,41 @@ const ManageSubjects = () => {
     };
 
     fetchSubjects();
-  }, [token]);
+  }, [navigate]);
 
   const handleAddSubject = async () => {
     if (
-      newSubject.subjectName &&
-      newSubject.subjectCode &&
-      newSubject.course &&
-      newSubject.year
+      !newSubject.subjectName ||
+      !newSubject.subjectCode ||
+      !newSubject.course ||
+      !newSubject.year
     ) {
-      try {
-        const response = await axios.post(
-          "http://localhost:3000/api/qpaper/subject",
-          newSubject,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        setSubjects([...subjects, response.data]);
-        setNewSubject({
-          subjectName: "",
-          subjectCode: "",
-          course: "",
-          year: "",
-        });
-      } catch (error) {
-        console.error(
-          "Error adding subject:",
-          error.response?.data?.message || error.message
-        );
-        alert(error.response?.data?.message || "Failed to add subject.");
-      }
-    } else {
       alert("Please fill in all fields.");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/api/qpaper/subject",
+        newSubject,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setSubjects((prevSubjects) => [...prevSubjects, response.data]); // Ensures correct state update
+      setNewSubject({
+        subjectName: "",
+        subjectCode: "",
+        course: "",
+        year: "",
+      });
+    } catch (error) {
+      console.error(
+        "Error adding subject:",
+        error.response?.data?.message || error.message
+      );
+      alert(error.response?.data?.message || "Failed to add subject.");
     }
   };
 
@@ -134,14 +142,22 @@ const ManageSubjects = () => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {subjects.map((subject) => (
-            <TableRow key={subject.id}>
-              <TableCell>{subject.subjectName}</TableCell>
-              <TableCell>{subject.subjectCode}</TableCell>
-              <TableCell>{subject.course}</TableCell>
-              <TableCell>{subject.year}</TableCell>
+          {subjects.length > 0 ? (
+            subjects.map((subject) => (
+              <TableRow key={subject._id}>
+                <TableCell>{subject.subjectName}</TableCell>
+                <TableCell>{subject.subjectCode}</TableCell>
+                <TableCell>{subject.course}</TableCell>
+                <TableCell>{subject.year}</TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan="4" className="text-center text-gray-500">
+                No subjects available
+              </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
     </div>

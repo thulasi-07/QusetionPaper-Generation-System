@@ -53,15 +53,7 @@ const NavBar = () => {
                 Manage Questions
               </Link>
             </li>
-            <li>
-              <Link
-                to="manage-patterns"
-                className="block hover:text-gray-300"
-                onClick={() => setIsOpen(false)}
-              >
-                Patterns
-              </Link>
-            </li>
+
             <li>
               <Link
                 to="generate-paper"
@@ -69,15 +61,6 @@ const NavBar = () => {
                 onClick={() => setIsOpen(false)}
               >
                 Generate Paper
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="reports"
-                className="block hover:text-gray-300"
-                onClick={() => setIsOpen(false)}
-              >
-                Reports
               </Link>
             </li>
           </ul>
