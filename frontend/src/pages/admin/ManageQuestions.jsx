@@ -51,65 +51,69 @@ const ManageQuestions = () => {
   }, [token]);
 
   // Fetch questions
+  const fetchQuestions = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:3000/api/qpaper/questions",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setQuestions(response.data.questionSets); // ✅ Correct structure
+    } catch (error) {
+      console.error(
+        "Error fetching questions:",
+        error.response?.data?.message || error.message
+      );
+    }
+  };
+
   useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:3000/api/qpaper/questions",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        console.log(response);
-        setQuestions(response.data.questionSets);
-      } catch (error) {
-        console.error(
-          "Error fetching questions:",
-          error.response?.data?.message || error.message
-        );
-      }
-    };
     fetchQuestions();
   }, [token]);
 
   // Handle adding a new question
   const handleAddQuestion = async () => {
-    if (Object.values(newQuestion).every((value) => value)) {
-      try {
-        await axios.post(
-          "http://localhost:3000/api/qpaper/questions",
-          {
-            subjectCode: newQuestion.subjectCode,
-            year: parseInt(newQuestion.year, 10),
-            questionText: newQuestion.questionText,
-            co: newQuestion.co,
-            llo: newQuestion.llo,
-            bL: newQuestion.bL,
-            po: newQuestion.po,
-            marks: parseInt(newQuestion.marks, 10),
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+    if (Object.values(newQuestion).some((value) => !value)) {
+      alert("Please fill all fields.");
+      return;
+    }
 
-        setNewQuestion({
-          questionText: "",
-          subjectCode: "",
-          year: "",
-          co: "",
-          llo: "",
-          bL: "",
-          po: "",
-          marks: "",
-        });
+    try {
+      await axios.post(
+        "http://localhost:3000/api/qpaper/questions",
+        {
+          subjectCode: newQuestion.subjectCode,
+          year: parseInt(newQuestion.year, 10),
+          questionText: newQuestion.questionText,
+          co: newQuestion.co,
+          llo: newQuestion.llo,
+          bL: newQuestion.bL,
+          po: newQuestion.po,
+          marks: parseInt(newQuestion.marks, 10),
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-        // Refresh Questions
-        setQuestions([...questions, { id: Date.now(), ...newQuestion }]);
-      } catch (error) {
-        console.error(
-          "Error adding question:",
-          error.response?.data?.message || error.message
-        );
-      }
+      // ✅ After adding, refetch questions to avoid structure errors
+      fetchQuestions();
+
+      // ✅ Reset input fields
+      setNewQuestion({
+        questionText: "",
+        subjectCode: "",
+        year: "",
+        co: "",
+        llo: "",
+        bL: "",
+        po: "",
+        marks: "",
+      });
+    } catch (error) {
+      console.error(
+        "Error adding question:",
+        error.response?.data?.message || error.message
+      );
     }
   };
 
@@ -129,7 +133,6 @@ const ManageQuestions = () => {
           className="border border-gray-300 rounded p-2 w-full col-span-3"
         />
 
-        {/* Course Outcome (CO) */}
         <Input
           placeholder="CO (Course Outcome)"
           value={newQuestion.co}
@@ -139,7 +142,6 @@ const ManageQuestions = () => {
           className="border border-gray-300 rounded p-2 w-full"
         />
 
-        {/* Learning Level Outcome (LLO) */}
         <Input
           placeholder="LLO (Learning Level Outcome)"
           value={newQuestion.llo}
@@ -149,7 +151,6 @@ const ManageQuestions = () => {
           className="border border-gray-300 rounded p-2 w-full"
         />
 
-        {/* Bloom's Taxonomy Level (BL) */}
         <Input
           placeholder="BL (Bloom's Taxonomy Level)"
           value={newQuestion.bL}
@@ -159,7 +160,6 @@ const ManageQuestions = () => {
           className="border border-gray-300 rounded p-2 w-full"
         />
 
-        {/* Program Outcome (PO) */}
         <Input
           placeholder="PO (Program Outcome)"
           value={newQuestion.po}
@@ -224,7 +224,7 @@ const ManageQuestions = () => {
         <TableHead>
           <TableRow>
             <TableCell>Question</TableCell>
-            <TableCell>Subject code</TableCell>
+            <TableCell>Subject Code</TableCell>
             <TableCell>Year</TableCell>
             <TableCell>CO</TableCell>
             <TableCell>LLO</TableCell>
@@ -234,19 +234,20 @@ const ManageQuestions = () => {
         </TableHead>
         <TableBody>
           {questions.flatMap((qSet) =>
-            [...qSet.twoMarksQuestions, ...qSet.tenMarksQuestions].map(
-              (q, index) => (
-                <TableRow key={index}>
-                  <TableCell>{q.questionText}</TableCell>
-                  <TableCell>{qSet.subjectId.subjectCode}</TableCell>
-                  <TableCell>{qSet.subjectId.year}</TableCell>
-                  <TableCell>{q.co}</TableCell>
-                  <TableCell>{q.llo}</TableCell>
-                  <TableCell>{q.bL}</TableCell>
-                  <TableCell>{q.po}</TableCell>
-                </TableRow>
-              )
-            )
+            [
+              ...(qSet.twoMarksQuestions || []), // ✅ Handle undefined cases
+              ...(qSet.tenMarksQuestions || []),
+            ].map((q, index) => (
+              <TableRow key={index}>
+                <TableCell>{q.questionText}</TableCell>
+                <TableCell>{qSet.subjectId.subjectCode}</TableCell>
+                <TableCell>{qSet.subjectId.year}</TableCell>
+                <TableCell>{q.co}</TableCell>
+                <TableCell>{q.llo}</TableCell>
+                <TableCell>{q.bL}</TableCell>
+                <TableCell>{q.po}</TableCell>
+              </TableRow>
+            ))
           )}
         </TableBody>
       </Table>

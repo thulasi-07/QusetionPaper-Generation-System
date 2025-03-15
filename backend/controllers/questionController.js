@@ -37,7 +37,7 @@ const addQuestion = asyncHandler(async (req, res) => {
     });
   }
 
-  const newQuestion = { questionText, co, llo, bL, po };
+  const newQuestion = { questionText, co, llo, bL, po, marks };
 
   if (marks === 2) {
     questionSet.twoMarksQuestions.push(newQuestion);

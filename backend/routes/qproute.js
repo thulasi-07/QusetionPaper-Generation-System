@@ -9,7 +9,11 @@ import {
   addQuestion,
   getAllQuestionSets,
 } from "../controllers/questionController.js";
-import { generateQuestionPaper } from "../controllers/generateQpController.js";
+import {
+  generateQuestionPaper,
+  getAllGeneratedPapers,
+  getDownloadPdf,
+} from "../controllers/generateQpController.js";
 
 const qprouter = express.Router();
 
@@ -23,5 +27,9 @@ qprouter
   .post(authMiddleware, addQuestion)
   .get(authMiddleware, getAllQuestionSets);
 qprouter.route("/generateqp").post(authMiddleware, generateQuestionPaper);
+qprouter
+  .route("/getgeneratedqp")
+  .get(authMiddleware, getAllGeneratedPapers)
+  .post(authMiddleware, getDownloadPdf);
 
 export default qprouter;
